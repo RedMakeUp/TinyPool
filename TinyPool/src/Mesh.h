@@ -5,10 +5,6 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include <string>
-#include <fstream>
-#include <sstream>
-#include <iostream>
 #include <vector>
 
 #include "Shader.h"
@@ -18,8 +14,8 @@ struct Vertex {
 	glm::vec3 Position;
 	glm::vec3 Normal;
 	glm::vec2 TexCoords;
-	glm::vec3 Tangent;
-	glm::vec3 Bitangent;
+	/*glm::vec3 Tangent;
+	glm::vec3 Bitangent;*/
 };
 
 struct Texture {
@@ -31,11 +27,15 @@ struct Texture {
 class Mesh {
 public:
 	Mesh(const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices, const std::vector<Texture>& textures);
+	Mesh() = default;
 
-	// render the mesh
 	void Draw(Shader* shader);
 
+	void loadToGPU();
+
 private:
+	friend class Model;
+
 	GLuint m_vao = 0, m_vbo = 0, m_ebo = 0;
 
 	std::vector<Vertex> m_vertices;
