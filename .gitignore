@@ -1,0 +1,14 @@
+# Directories
+.vs/
+bin/
+bin-int/
+Vendors/assimp-master/build/
+Vendors/glad/bin/
+Vendors/glad/bin-int/
+Vendors/glfw-3.3/bin/
+Vendors/glfw-3.3/bin-int/
+Vendors/spdlog/bin/
+Vendors/spdlog/bin-int/
+
+# Files
+*.user
