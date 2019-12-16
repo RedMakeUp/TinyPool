@@ -30,6 +30,9 @@ bool firstMouse = true;
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
+// lighting
+glm::vec3 lightPos(5.0f, 10.0f, 10.0f);
+
 int main()
 {
 	// glfw: initialize and configure
@@ -71,12 +74,13 @@ int main()
 
 	// build and compile shaders
 	// -------------------------
-	Shader ourShader("res/shaders/basic_model.vs", "res/shaders/basic_model.fs");
+	Shader ourShader("res/shaders/material.vs", "res/shaders/material.fs");
 
 	// load models
 	// -----------
 	Model ourModel("res/models/nanosuit/nanosuit.obj");
 
+	ourShader.use();
 
 	// draw in wireframe
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -103,16 +107,22 @@ int main()
 		// don't forget to enable shader before setting uniforms
 		ourShader.use();
 
+		ourShader.setVec3("light.position", lightPos);
+		ourShader.setVec3("viewPos", camera.Position);
+		ourShader.setVec3("light.ambient", 0.2f, 0.2f, 0.2f);
+		ourShader.setVec3("light.diffuse", 0.5f, 0.5f, 0.5f);
+		ourShader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
+		ourShader.setFloat("material.shininess", 64.0f);
+
 		// view/projection transformations
 		glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
 		glm::mat4 view = camera.GetViewMatrix();
-		ourShader.setMat4("projection", projection);
-		ourShader.setMat4("view", view);
 
 		// render the loaded model
 		glm::mat4 model = glm::mat4(1.0f);
 		model = glm::translate(model, glm::vec3(0.0f, -1.75f, 0.0f)); // translate it down so it's at the center of the scene
 		model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));	// it's a bit too big for our scene, so scale it down
+		ourShader.setMat4("mvp", projection * view * model);
 		ourShader.setMat4("model", model);
 		ourModel.Render(&ourShader);
 
