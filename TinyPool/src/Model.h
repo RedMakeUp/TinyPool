@@ -26,6 +26,7 @@ public:
 	void Render(Shader* shader);
 
 	inline void loadToGPU() { for (auto& mesh : m_meshes) mesh->loadToGPU(); }
+	inline void SetModelToWorld(const glm::mat4& modelToWorld) { m_modelToWorld = modelToWorld; }
 
 private:
 	void LoadModelFromFile(const std::string& path);
@@ -43,4 +44,6 @@ private:
 	std::vector<Texture> m_textures_loaded;	// stores all the textures loaded so far, optimization to make sure textures aren't loaded more than once.
 	std::vector<std::unique_ptr<Mesh>> m_meshes;
 	std::string m_directory;
+
+	glm::mat4 m_modelToWorld = glm::mat4(1.0f);
 };

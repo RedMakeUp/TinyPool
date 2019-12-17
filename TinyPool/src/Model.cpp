@@ -14,8 +14,10 @@ Model::Model(const std::string& path)
 
 void Model::Render(Shader* shader)
 {
+	//shader->bind();
 	for (unsigned int i = 0; i < m_meshes.size(); i++)
-		m_meshes[i]->Draw(shader);
+		m_meshes[i]->Render(shader,m_modelToWorld);
+	//shader->unbind();
 }
 
 void Model::LoadModelFromFile(const std::string& path) {

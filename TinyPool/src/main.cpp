@@ -8,6 +8,8 @@
 #include "Shader.h"
 #include "Camera.h"
 #include "Model.h"
+#include "Light.h"
+#include "Terrain.h"
 
 #include <iostream>
 
@@ -21,7 +23,7 @@ const unsigned int SCR_WIDTH = 1280;
 const unsigned int SCR_HEIGHT = 768;
 
 // camera
-Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
+Camera camera(glm::vec3(0.0f, 2.0f, 3.0f));
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
@@ -30,8 +32,6 @@ bool firstMouse = true;
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
-// lighting
-glm::vec3 lightPos(5.0f, 10.0f, 10.0f);
 
 int main()
 {
@@ -75,12 +75,19 @@ int main()
 	// build and compile shaders
 	// -------------------------
 	Shader ourShader("res/shaders/material.vs", "res/shaders/material.fs");
+	Shader terrainShader("res/shaders/terrain.vs", "res/shaders/terrain.fs");
 
 	// load models
 	// -----------
 	Model ourModel("res/models/nanosuit/nanosuit.obj");
 
-	ourShader.use();
+	// Sun light
+	// -----------
+	DirectedLight sun(glm::vec3(0.0f, -1.0f, 0.0f));
+
+	// Terrain
+	// -----------
+	Terrain terrain(-100, -100);
 
 	// draw in wireframe
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -99,33 +106,41 @@ int main()
 		// -----
 		processInput(window);
 
+		// update
+		// ------
+		// view/projection transformations
+		glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+		glm::mat4 view = camera.GetViewMatrix();
+
+		glm::mat4 model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(0.0f, -1.75f, 0.0f)); // translate it down so it's at the center of the scene
+		model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));	// it's a bit too big for our scene, so scale it down
+		ourModel.SetModelToWorld(model);
+
 		// render
 		// ------
 		glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		// don't forget to enable shader before setting uniforms
-		ourShader.use();
+		terrainShader.bind();
+		terrainShader.setMat4("projection_view", projection * view);
+		terrain.Render(&terrainShader);
+		terrainShader.unbind();
 
-		ourShader.setVec3("light.position", lightPos);
+
+		ourShader.bind();
+
+		ourShader.setVec3("light.direction", sun.GetDirection());
 		ourShader.setVec3("viewPos", camera.Position);
-		ourShader.setVec3("light.ambient", 0.2f, 0.2f, 0.2f);
-		ourShader.setVec3("light.diffuse", 0.5f, 0.5f, 0.5f);
-		ourShader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
+		ourShader.setVec3("light.ambient", sun.GetAmbient());
+		ourShader.setVec3("light.diffuse", sun.GetDiffuse());
+		ourShader.setVec3("light.specular", sun.GetSpecular());
 		ourShader.setFloat("material.shininess", 64.0f);
+		ourShader.setMat4("projection_view", projection * view);
 
-		// view/projection transformations
-		glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-		glm::mat4 view = camera.GetViewMatrix();
-
-		// render the loaded model
-		glm::mat4 model = glm::mat4(1.0f);
-		model = glm::translate(model, glm::vec3(0.0f, -1.75f, 0.0f)); // translate it down so it's at the center of the scene
-		model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));	// it's a bit too big for our scene, so scale it down
-		ourShader.setMat4("mvp", projection * view * model);
-		ourShader.setMat4("model", model);
 		ourModel.Render(&ourShader);
 
+		ourShader.unbind();
 
 		// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
 		// -------------------------------------------------------------------------------

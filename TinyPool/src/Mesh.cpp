@@ -8,8 +8,24 @@ Mesh::Mesh(const std::vector<Vertex>& vertices, const std::vector<unsigned int>&
 
 }
 
-void Mesh::Draw(Shader* shader)
+Mesh::Mesh(const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices)
+	:m_vertices(vertices),
+	m_indices(indices)
 {
+
+}
+
+Mesh::~Mesh()
+{
+	glDeleteBuffers(1, &m_vbo);
+	glDeleteBuffers(1, &m_ebo);
+	glDeleteVertexArrays(1, &m_vao);
+}
+
+void Mesh::Render(Shader* shader, const glm::mat4& modelToWorld)
+{
+	shader->setMat4("model", modelToWorld * m_localToModel);
+
 	// bind appropriate textures
 	unsigned int diffuseNr = 1;
 	unsigned int specularNr = 1;
